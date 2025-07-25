@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Exit immediately if a command exits with a non-zero status
+# Treat unset variables as an error
+# Print each command before executing
+# Fail the pipeline if any command fails
 set -euxo pipefail
 
 # Authenticate admin admin with Vault using AppRole.
