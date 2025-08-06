@@ -118,38 +118,36 @@ vault write pki_int/roles/admin \
 # based on the role created above.
 vault write pki_int/issue/admin common_name="vault.corp.internal" ttl="24h"
 
-# Run this command three times so you can revoke certificates next.
-
 # List serial numbers of all issued certificates in pki_int.
-vault list pki_int/certs
+# vault list pki_int/certs
 
 # Open certificate in admin admin to verify serial number.
-openssl x509 -in /etc/admin/ssl/admin.pem -noout -text
+# openssl x509 -in /etc/admin/ssl/admin.pem -noout -text
 
 # Revoke a certificate by its serial number.
-vault write pki_int/revoke serial_number="SERIAL_NUMBER"
+# vault write pki_int/revoke serial_number="SERIAL_NUMBER"
 
-# Once certificate is revoked, restart vault agent on admin admin.
-systemctl reload admin
-sudo systemctl restart vault-agent
+# Once certificate is revoked, restart vault agent on admin.
+# systemctl reload admin
+# sudo systemctl restart vault-agent
 
-# Share information about the certificate within admin admin. 
-openssl x509 -in /etc/admin/ssl/admin.pem -noout -text
+# Share information about the certificate within admin. 
+# openssl x509 -in /etc/admin/ssl/admin.pem -noout -text
 
 # But the admin admin is still serving the old certificate.
 
 # Rotate Root CA
-vault write root_pki/root/rotate/internal \
-    common_name="Vault Root CA 2.0" \
-    issuer_name="vault-root-ca-2"
+# vault write root_pki/root/rotate/internal \
+#     common_name="Vault Root CA 2.0" \
+#     issuer_name="vault-root-ca-2"
 
 # Rotate Intermediate CA
-vault write pki_int/intermediate/rotate/internal \
-    common_name="Vault Intermediate Authority 2.0" \
-    issuer_name="vault-int-ca-2"
+# vault write pki_int/intermediate/rotate/internal \
+#     common_name="Vault Intermediate Authority 2.0" \
+#     issuer_name="vault-int-ca-2"
 
 # List the issuers and its keys for root_pki CA.
-vault list root_pki/issuers
+# vault list root_pki/issuers
 
 # Both root CA issuers are now enabled in the same PKI engine mount.
 # While new root CA is generated, the old root CA is still valid.
@@ -160,25 +158,29 @@ vault list root_pki/issuers
 # Simple way to transition from one issuer to another.
 
 # Set new default issuer for the root_pki CA.
-vault write root_pki/root/replace -default="vault-root-ca-2"
+# vault write root_pki/root/replace -default="vault-root-ca-2"
 
 # Sunset defunct root CA.
 # This command means vault-root-ca can't issue new certificates.
 # tail -n 5 is used to show the last 5 lines of the output.
-vault write root_pki/issuer/vault-root-ca \
-    issuer_name="vault-root-ca" \
-    usage=read-only,crl-signing | tail -n 5
+# vault write root_pki/issuer/vault-root-ca \
+#     issuer_name="vault-root-ca" \
+#     usage=read-only,crl-signing | tail -n 5
 
 # Add certificate to Keychain to trust
-sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain vault-root-ca.pem
+# sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain <vault-root-ca.pem>
 
 # Add intermediate CA to Keychain to trust
-sudo security add-trusted-cert -d -r trustAsRoot -k /Library/Keychains/System.keychain vault-intermediate-ca.pem
+# sudo security add-trusted-cert -d -r trustAsRoot -k /Library/Keychains/System.keychain <vault-intermediate-ca.pem>
 
-vault write -f pki/tidy \	
-	tidy_cert_store=true \
-	tidy_revoked_certs=true \
-	tidy_expired_issuers=true
+# Tidy up the PKI secrets engine.
+# This command removes expired and revoked certificates,
+# and cleans up the certificate store and removes expired issuers.
+
+# vault write -f pki/tidy \	
+# 	tidy_cert_store=true \
+# 	tidy_revoked_certs=true \
+# 	tidy_expired_issuers=true
 
 # Demo Vault Agent with admin server.
 # admin server is authenticated with Vault using AppRole.
